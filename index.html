@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neonvoid | Anonymous Messaging</title>
+    <style>
+    
+    .splash-img {
+    width: 180px; /* Adjust size as needed */
+    height: auto;
+    filter: drop-shadow(0 0 15px var(--neon-cyan)); /* Adds a neon glow to your image */
+    animation: pulse 1.5s infinite;
+}
+
+/* Ensure the splash screen covers the whole phone display */
+#splash-screen {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; 
+    height: 100vh;
+    background: #0d0221; /* Matches your app background */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    transition: opacity 0.8s ease; /* Smooth fade out */
+}
+
+        :root {
+            --bg: #0d0221;
+            --neon-cyan: #00f2ff;
+            --neon-magenta: #ff00cc;
+            --glass: rgba(255, 255, 255, 0.08);
+            --border: rgba(255, 255, 255, 0.15);
+        }
+        * { box-sizing: border-box; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { margin: 0; background: var(--bg); color: white; display: flex; justify-content: center; min-height: 100vh; overflow-x: hidden; }
+        .app-container { width: 100%; max-width: 450px; padding: 20px; position: relative; }
+        
+        /* Navigation & Screens */
+        .screen { display: none; flex-direction: column; align-items: center; text-align: center; animation: fadeIn 0.4s ease; }
+        .screen.active { display: flex; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* UI Components */
+        .logo-n { width: 90px; height: 90px; border-radius: 50%; background: linear-gradient(135deg, var(--neon-cyan), var(--neon-magenta)); display: flex; align-items: center; justify-content: center; font-size: 2.5rem; font-weight: 800; margin-top: 40px; box-shadow: 0 0 25px rgba(0, 210, 255, 0.4); }
+        .brand-name { font-size: 2.2rem; letter-spacing: 6px; margin: 20px 0 5px; text-shadow: 0 0 15px var(--neon-magenta); }
+        .input-box { background: var(--glass); border: 1px solid var(--border); border-radius: 15px; padding: 16px; width: 100%; color: white; outline: none; text-align: center; margin-bottom: 15px; font-size: 1rem; }
+        .btn-neon { background: linear-gradient(90deg, var(--neon-cyan), var(--neon-magenta)); border: none; border-radius: 50px; padding: 18px 0; width: 100%; color: white; font-weight: bold; font-size: 1.1rem; cursor: pointer; margin-top: 20px; transition: transform 0.2s; }
+        .btn-neon:active { transform: scale(0.98); }
+        .glass-card { background: var(--glass); border: 1px solid var(--border); border-radius: 20px; padding: 20px; width: 100%; margin-bottom: 15px; backdrop-filter: blur(10px); }
+        
+        /* Tabs */
+        .tab-container { display: flex; gap: 30px; margin: 25px 0; }
+        .tab { cursor: pointer; opacity: 0.5; font-weight: bold; padding-bottom: 5px; transition: 0.3s; }
+        .active-tab { opacity: 1; border-bottom: 2px solid var(--neon-cyan); color: var(--neon-cyan); }
+        
+        /* Avatars */
+        .avatar-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; width: 100%; margin-top: 20px; }
+        .avatar-item { font-size: 2rem; padding: 15px; background: var(--glass); border-radius: 15px; cursor: pointer; border: 2px solid transparent; }
+        
+        textarea { width: 100%; height: 120px; background: transparent; border: none; color: white; resize: none; outline: none; font-size: 1.1rem; }
+    </style>
+</head>
+<body>
+    
+    <div id="splash-screen">
+    <img src="splash.png" class="splash-img" alt="Neonvoid Logo">
+    
+</div>
+
+
+    <div class="app-container">
+        <div id="screen-landing" class="screen">
+            <div class="logo-n">N</div>
+            <img src="splash.png" alt="splash logo">
+            <p style="opacity: 0.7; margin-bottom: 40px;">Anonymous Messaging for the Bold</p>
+            <button class="btn-neon" onclick="showScreen('screen-age')">GET STARTED</button>
+        </div>
+
+        <div id="screen-age" class="screen">
+            <h2 style="margin-top:60px;">Verify your age</h2>
+            <input type="number" id="age-year" class="input-box" placeholder="Birth Year (e.g. 2005)">
+            <button class="btn-neon" onclick="checkAge()">Continue!</button>
+        </div>
+
+        <div id="screen-username" class="screen">
+            <h2 style="margin-top:60px;">Create a username</h2>
+            <input type="text" id="username-input" class="input-box" placeholder="@username">
+            <button class="btn-neon" id="user-btn" onclick="claimUsername()">Continue</button>
+        </div>
+
+        <div id="screen-avatar" class="screen">
+            <h2 style="margin-top:60px;">Pick an Avatar</h2>
+            <div id="avatar-grid" class="avatar-grid"></div>
+            <button class="btn-neon" id="confirm-avatar-btn" style="display:none;" onclick="finishSetup()">Complete Setup</button>
+        </div>
+
+        <div id="screen-dashboard" class="screen">
+            <div class="logo-n" id="dash-avatar">N</div>
+            <h3 id="dash-username">@User</h3>
+            <div class="tab-container">
+                <div id="t-share" class="tab active-tab" onclick="toggleTab('share')">SHARE</div>
+                <div id="t-inbox" class="tab" onclick="toggleTab('inbox')">INBOX</div>
+            </div>
+            <div id="view-share" style="width:100%">
+                <div class="glass-card">Copy your link below to start receiving anonymous messages!</div>
+                <button class="btn-neon" onclick="shareLink()">Share My Link 😊</button>
+            </div>
+            <div id="view-inbox" style="width:100%; display:none;">
+                <div id="message-list"></div>
+            </div>
+        </div>
+
+        <div id="screen-send" class="screen">
+            <div class="logo-n" id="pub-avatar-display">?</div>
+            <h2 id="pub-user-display">@User</h2>
+            <div class="glass-card"><textarea id="msg-input" placeholder="Write a secret message..."></textarea></div>
+            <button class="btn-neon" onclick="sendMessage()">Send Message!</button>
+            <button class="btn-neon" style="background:transparent; border:1px solid var(--neon-cyan)" 
+                    onclick="window.location.assign(window.location.origin + window.location.pathname)">
+                Create your own ⚡
+            </button>
+        </div>
+    </div>
+
+    <script type="module">
+    
+    window.addEventListener('load', () => {
+    setTimeout(() => {
+        const splash = document.getElementById('splash-screen');
+        if (splash) {
+            splash.style.opacity = '0';
+            setTimeout(() => {
+                splash.style.display = 'none';
+            }, 800); // Wait for fade transition to finish
+        }
+    }, 3000); // 3 seconds
+});
+
+    
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, addDoc, collection, query, where, onSnapshot, orderBy, serverTimestamp, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {    
+            apiKey: "AIzaSyA61eejqpYEbHDY6JvKihCdxn5_QA5Lf1Y", authDomain: "neonvoid-app.firebaseapp.com",
+            projectId: "neonvoid-app", storageBucket: "neonvoid-app.firebasestorage.app",
+            messagingSenderId: "1008635266560", appId: "1:1008635266560:web:1abf794e7a39e3732a3ae5"    
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let myData = { username: '', avatar: 'N' };
+
+        window.showScreen = (id) => {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        };
+
+        // AUTO-LOGIN & TARGET FETCHER
+        onAuthStateChanged(auth, async (user) => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const targetId = urlParams.get('id');
+
+            if (targetId) {
+                const targetDoc = await getDoc(doc(db, "users", targetId));
+                if (targetDoc.exists()) {
+                    document.getElementById('pub-user-display').innerText = "@" + targetDoc.data().username;
+                    document.getElementById('pub-avatar-display').innerText = targetDoc.data().avatar;
+                }
+                showScreen('screen-send');
+            } else if (user) {
+                const userDoc = await getDoc(doc(db, "users", user.uid));
+                if (userDoc.exists()) {
+                    myData = userDoc.data();
+                    initDash();
+                    showScreen('screen-dashboard');
+                } else {
+                    showScreen('screen-username');
+                }
+            } else {
+                showScreen('screen-landing');
+            }
+        });
+
+        window.checkAge = () => {
+            const age = new Date().getFullYear() - document.getElementById('age-year').value;
+            if (age >= 13) showScreen('screen-username');
+            else alert("Must be 13+ to enter the void.");
+        };
+
+        window.claimUsername = async () => {
+            const name = document.getElementById('username-input').value.toLowerCase().trim();
+            if (!name || name.length < 3) return alert("Enter at least 3 characters");
+            try {
+                await setPersistence(auth, browserLocalPersistence);
+                const cred = await signInAnonymously(auth);
+                const nameSnap = await getDoc(doc(db, "usernames", name));
+                if (nameSnap.exists()) alert("Username taken!");
+                else {
+                    await setDoc(doc(db, "usernames", name), { uid: cred.user.uid });
+                    myData.username = name;
+                    showScreen('screen-avatar');
+                    loadAvatars();
+                }
+            } catch (e) { alert(e.message); }
+        };
+
+        function loadAvatars() {
+            const g = document.getElementById('avatar-grid'); g.innerHTML = "";
+            ['👻','🤖','👽','⚡','🌌','🌠','💎','🔥','💀'].forEach(i => {
+                const d = document.createElement('div'); d.className="avatar-item"; d.innerHTML=i;
+                d.onclick = () => { 
+                    document.querySelectorAll('.avatar-item').forEach(el => el.style.borderColor="transparent");
+                    d.style.borderColor="var(--neon-cyan)";
+                    myData.avatar = i; 
+                    document.getElementById('confirm-avatar-btn').style.display="block"; 
+                };
+                g.appendChild(d);
+            });
+        }
+
+        window.finishSetup = async () => {
+            await setDoc(doc(db, "users", auth.currentUser.uid), myData);
+            initDash();
+            showScreen('screen-dashboard');
+        };
+
+        window.deleteMessage = async (msgId) => {
+            if (confirm("Send this message into the void forever?")) {
+                try {
+                    await deleteDoc(doc(db, "messages", msgId));
+                } catch (e) {
+                    alert("Delete failed. Check your Firebase Rules!");
+                }
+            }
+        };
+
+        function initDash() {
+            document.getElementById('dash-username').innerText = "@" + myData.username;
+            document.getElementById('dash-avatar').innerText = myData.avatar;
+            const q = query(collection(db, "messages"), where("receiverId", "==", auth.currentUser.uid), orderBy("timestamp", "desc"));
+            
+            onSnapshot(q, s => {
+                const list = document.getElementById('message-list');
+                list.innerHTML = s.empty ? "<p style='margin-top:30px; opacity:0.5;'>The void is silent...</p>" : "";
+                s.forEach(d => {
+                    const m = d.data();
+                    const card = document.createElement('div'); 
+                    card.className="glass-card"; 
+                    card.style.position = "relative";
+                    card.style.textAlign = "left";
+                    card.innerHTML = `
+                        <p style="margin:0; padding-right:30px;">${m.text}</p>
+                        <span onclick="deleteMessage('${d.id}')" style="position:absolute; top:15px; right:15px; color:var(--neon-magenta); cursor:pointer; font-weight:bold;">×</span>
+                        <small style="display:block; margin-top:10px; color:var(--neon-cyan); opacity:0.6; font-size:0.7rem;">
+                            ${m.timestamp ? m.timestamp.toDate().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : 'Just now'}
+                        </small>
+                    `;
+                    list.appendChild(card);
+                });
+            }, (err) => console.error("Snapshot error: ", err));
+        }
+
+        window.toggleTab = (t) => {
+            const isS = t === 'share';
+            document.getElementById('view-share').style.display = isS ? 'block' : 'none';
+            document.getElementById('view-inbox').style.display = isS ? 'none' : 'block';
+            document.getElementById('t-share').classList.toggle('active-tab', isS);
+            document.getElementById('t-inbox').classList.toggle('active-tab', !isS);
+        };
+
+        window.sendMessage = async () => {
+            const txt = document.getElementById('msg-input').value.trim();
+            const rid = new URLSearchParams(window.location.search).get('id');
+            if (!txt) return alert("Message cannot be empty");
+            if (!rid) return alert("Receiver ID missing!");
+            try {
+                await addDoc(collection(db, "messages"), { 
+                    receiverId: rid, 
+                    text: txt, 
+                    timestamp: serverTimestamp() 
+                });
+                alert("Sent into the void!");
+                document.getElementById('msg-input').value = "";
+            } catch (e) { alert("Error: " + e.message); }
+        };
+
+        window.shareLink = () => {
+            const url = window.location.origin + window.location.pathname + "?id=" + auth.currentUser.uid;
+            if (navigator.share) {
+                navigator.share({ title: 'Neonvoid', url: url });
+            } else {
+                navigator.clipboard.writeText(url);
+                alert("Link Copied!");
+            }
+        };
+    </script>
+</body>
+</html>
